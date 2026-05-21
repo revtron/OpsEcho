@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: oposcho_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: opscho
+      POSTGRES_USER: opscho
+      POSTGRES_PASSWORD: opscho_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: oposcho_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Pull the model on startup (you can change the model)
+    command: >
+      sh -c "ollama pull mistral && ollama serve"
+
+  backend:
+    build: ./backend
+    container_name: oposcho_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+      - ollama
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/logs:/app/logs
+
+  frontend:
+    build: ./frontend
+    container_name: oposcho_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+
+volumes:
+  postgres_data:
+  ollama_data:
