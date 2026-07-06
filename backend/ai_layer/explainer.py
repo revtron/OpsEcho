@@ -40,10 +40,11 @@ class OperationalExplainer:
                 model=self.model_name,
                 prompt=prompt,
                 stream=False,
+                keep_alive="10m",
                 options={
-                    "temperature": 0.3,  # Lower temperature for more factual responses
+                    "temperature": 0.3,
                     "top_p": 0.9,
-                    "max_tokens": 500
+                    "max_tokens": 300
                 }
             )
             

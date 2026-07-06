@@ -2,12 +2,38 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
+import numpy as np
 from db.database import get_db
 from db.models import InfrastructureEvent, EventSummary
-from ai_layer.explainer import OperationalExplainer
-import numpy as np
 
 router = APIRouter()
+
+
+def cosine_similarity(a, b):
+    a = np.array(a)
+    b = np.array(b)
+    if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
+        return 0.0
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+
+
+def _event_to_dict(event: InfrastructureEvent, summary: EventSummary = None, similarity: float = None) -> dict:
+    d = {
+        "id": event.id,
+        "event_type": event.event_type,
+        "source": event.source,
+        "timestamp": event.timestamp.isoformat() if event.timestamp else None,
+        "is_processed": event.is_processed,
+        "status": event.status,
+        "severity": event.severity,
+        "failure_reason": event.failure_reason,
+        "summary": summary.summary_text if summary else None,
+        "operational_context": summary.operational_context if summary else None,
+    }
+    if similarity is not None:
+        d["similarity"] = similarity
+    return d
+
 
 @router.get("/", response_model=List[dict])
 async def search_events(
@@ -15,70 +41,41 @@ async def search_events(
     limit: int = Query(10, description="Number of results to return"),
     db: Session = Depends(get_db)
 ):
-    """
-    Search for infrastructure events using natural language.
-    If a query is provided, uses semantic search via embeddings.
-    Otherwise, returns recent events.
-    """
     if q:
-        # Semantic search: generate embedding for the query and find similar summaries
-        explainer = OperationalExplainer()
-        try:
-            # Generate embedding for the query
-            # We'll use the same method as in event processing: create a deterministic vector
-            # In a real system, you would use the same embedding model for consistency.
-            hash_obj = hash(q)
-            np.random.seed(abs(hash_obj) % 2**32)
-            query_embedding = np.random.rand(768).tolist()
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error generating query embedding: {str(e)}")
+        hash_obj = hash(q)
+        np.random.seed(abs(hash_obj) % 2**32)
+        query_embedding = np.random.rand(768).tolist()
 
-        # Use pgvector to find similar embeddings
-        # We'll use the cosine similarity (or L2 distance) provided by pgvector
-        # For simplicity, we'll do a raw SQL query. In a real app, you might use SQLAlchemy with pgvector extension.
-        from sqlalchemy import text
-        sql = text("""
-            SELECT e.id, e.event_type, e.source, e.timestamp, es.summary_text, es.operational_context,
-                   1 - (es.embedding <=> :query_embedding) AS similarity
-            FROM event_summaries es
-            JOIN infrastructure_events e ON es.event_id = e.id
-            WHERE es.embedding IS NOT NULL
-            ORDER BY es.embedding <=> :query_embedding
-            LIMIT :limit
-        """)
-        results = db.execute(sql, {
-            "query_embedding": query_embedding,
-            "limit": limit
-        }).fetchall()
+        summaries = db.query(EventSummary).filter(
+            EventSummary.embedding.isnot(None)
+        ).all()
 
-        # Format the results
+        scored = []
+        for s in summaries:
+            try:
+                emb = json.loads(s.embedding)
+                sim = cosine_similarity(query_embedding, emb)
+                scored.append((sim, s))
+            except (json.JSONDecodeError, TypeError, ValueError):
+                continue
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        scored = scored[:limit]
+
         events = []
-        for row in results:
-            events.append({
-                "id": row.id,
-                "event_type": row.event_type,
-                "source": row.source,
-                "timestamp": row.timestamp.isoformat() if row.timestamp else None,
-                "summary": row.summary_text,
-                "operational_context": row.operational_context,
-                "similarity": float(row.similarity)
-            })
+        for sim, s in scored:
+            event = db.query(InfrastructureEvent).filter(
+                InfrastructureEvent.id == s.event_id
+            ).first()
+            if event:
+                events.append(_event_to_dict(event, s, sim))
         return events
     else:
-        # Return recent events
         events = db.query(InfrastructureEvent).order_by(
             InfrastructureEvent.timestamp.desc()
         ).limit(limit).all()
-        return [
-            {
-                "id": e.id,
-                "event_type": e.event_type,
-                "source": e.source,
-                "timestamp": e.timestamp.isoformat() if e.timestamp else None,
-                "is_processed": e.is_processed
-            }
-            for e in events
-        ]
+        return [_event_to_dict(e) for e in events]
+
 
 @router.get("/similar/{event_id}", response_model=List[dict])
 async def get_similar_events(
@@ -86,10 +83,6 @@ async def get_similar_events(
     limit: int = Query(5, description="Number of similar events to return"),
     db: Session = Depends(get_db)
 ):
-    """
-    Find events similar to a given event based on their summaries.
-    """
-    # Get the event's summary
     event_summary = db.query(EventSummary).filter(EventSummary.event_id == event_id).first()
     if not event_summary:
         raise HTTPException(status_code=404, detail="Event summary not found")
@@ -97,32 +90,72 @@ async def get_similar_events(
     if not event_summary.embedding:
         raise HTTPException(status_code=400, detail="Event summary has no embedding")
 
-    # Use pgvector to find similar embeddings
-    from sqlalchemy import text
-    sql = text("""
-        SELECT e.id, e.event_type, e.source, e.timestamp, es.summary_text,
-               1 - (es.embedding <=> :event_embedding) AS similarity
-        FROM event_summaries es
-        JOIN infrastructure_events e ON es.event_id = e.id
-        WHERE es.event_id != :event_id
-        ORDER BY es.embedding <=> :event_embedding
-        LIMIT :limit
-    """)
-    results = db.execute(sql, {
-        "event_embedding": event_summary.embedding,
-        "event_id": event_id,
-        "limit": limit
-    }).fetchall()
+    try:
+        target_emb = json.loads(event_summary.embedding)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        raise HTTPException(status_code=500, detail="Invalid embedding format")
 
-    # Format the results
+    summaries = db.query(EventSummary).filter(
+        EventSummary.event_id != event_id,
+        EventSummary.embedding.isnot(None)
+    ).all()
+
+    scored = []
+    for s in summaries:
+        try:
+            emb = json.loads(s.embedding)
+            sim = cosine_similarity(target_emb, emb)
+            scored.append((sim, s))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    scored = scored[:limit]
+
     events = []
-    for row in results:
-        events.append({
-            "id": row.id,
-            "event_type": row.event_type,
-            "source": row.source,
-            "timestamp": row.timestamp.isoformat() if row.timestamp else None,
-            "summary": row.summary_text,
-            "similarity": float(row.similarity)
-        })
+    for sim, s in scored:
+        event = db.query(InfrastructureEvent).filter(
+            InfrastructureEvent.id == s.event_id
+        ).first()
+        if event:
+            events.append(_event_to_dict(event, s, sim))
     return events
+
+
+@router.get("/ask")
+async def ask_question(
+    q: str = Query(..., description="Natural language question about infrastructure"),
+    db: Session = Depends(get_db)
+):
+    from ai_layer.explainer import OperationalExplainer
+    import httpx
+
+    try:
+        r = httpx.get("http://localhost:11434/api/tags", timeout=2)
+        if r.status_code != 200:
+            return {"answer": None, "ai_available": False, "message": "Ollama not running. Start it with: ollama serve"}
+    except Exception:
+        return {"answer": None, "ai_available": False, "message": "Ollama not running. Start it with: ollama serve"}
+
+    explainer = OperationalExplainer(model_name="phi")
+    events = db.query(InfrastructureEvent).order_by(
+        InfrastructureEvent.timestamp.desc()
+    ).limit(10).all()
+
+    summaries = []
+    for ev in events:
+        s = db.query(EventSummary).filter(EventSummary.event_id == ev.id).first()
+        if s:
+            summaries.append({
+                "id": ev.id,
+                "event_type": ev.event_type,
+                "source": ev.source,
+                "timestamp": ev.timestamp.isoformat() if ev.timestamp else None,
+                "status": ev.status,
+                "severity": ev.severity,
+                "summary": s.summary_text,
+                "operational_context": s.operational_context,
+            })
+
+    answer = explainer.answer_question(q, summaries)
+    return {"answer": answer, "ai_available": True, "events_used": len(summaries)}

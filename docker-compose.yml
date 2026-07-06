@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: oposcho_postgres
+    container_name: opsecho_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: opscho
@@ -16,7 +16,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    container_name: oposcho_ollama
+    container_name: opsecho_ollama
     restart: unless-stopped
     volumes:
       - ollama_data:/root/.ollama
@@ -28,7 +28,7 @@ services:
 
   backend:
     build: ./backend
-    container_name: oposcho_backend
+    container_name: opsecho_backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
@@ -43,7 +43,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: oposcho_frontend
+    container_name: opsecho_frontend
     restart: unless-stopped
     depends_on:
       - backend

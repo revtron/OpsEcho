@@ -1,26 +1,51 @@
 import logging
 import json
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+
+# Common Terraform error patterns
+TERRAFORM_ERROR_PATTERNS = [
+    (r"Error: (.+)$", "error"),
+    (r"Error applying", "apply_error"),
+    (r"Error acquiring the state lock", "state_lock_error"),
+    (r"Error refreshing state", "state_refresh_error"),
+    (r"timeout while waiting for state to become", "timeout"),
+    (r"Provider .+ had an error", "provider_error"),
+    (r"Resource .+ has a problem", "resource_error"),
+    (r"status code: [45]\d\d", "http_error"),
+    (r"context deadline exceeded", "timeout"),
+    (r"no such host", "dns_error"),
+    (r"connection refused", "connection_error"),
+    (r"failed to create", "create_failure"),
+    (r"failed to delete", "delete_failure"),
+    (r"failed to update", "update_failure"),
+    (r"Invalid or unknown key", "syntax_error"),
+    (r"Unsupported argument", "syntax_error"),
+    (r"Missing required argument", "syntax_error"),
+]
 
 class TerraformParser:
     def __init__(self):
         logging.info("Terraform parser initialized")
 
     def parse_plan(self, plan_output: str) -> Dict[str, Any]:
-        """
-        Parse Terraform plan output to extract changes.
-        This is a simplified parser for MVP.
-        """
+        """Parse Terraform plan output to extract changes."""
         changes = {
             "create": [],
             "update": [],
             "delete": [],
-            "resources": {}
+            "resources": {},
         }
 
-        # Simple regex patterns for demonstration
-        # In reality, you'd parse the JSON plan output
+        # Check for errors in plan output
+        errors = self._detect_errors(plan_output)
+        if errors:
+            return {
+                "changes": changes,
+                "error": errors[0]["message"],
+                "errors": errors,
+            }
+
         create_pattern = r"# (\S+) will be created"
         update_pattern = r"# (\S+) will be updated in-place"
         delete_pattern = r"# (\S+) will be destroyed"
@@ -34,7 +59,6 @@ class TerraformParser:
         for match in re.finditer(delete_pattern, plan_output):
             changes["delete"].append(match.group(1))
 
-        # Extract resource details (simplified)
         resource_pattern = r'resource\s+"(\S+)"\s+"(\S+)"'
         for match in re.finditer(resource_pattern, plan_output):
             resource_type, resource_name = match.groups()
@@ -43,31 +67,59 @@ class TerraformParser:
                 changes["resources"][key] = {
                     "type": resource_type,
                     "name": resource_name,
-                    "changes": {}
+                    "changes": {},
                 }
 
         return changes
 
     def parse_apply(self, apply_output: str) -> Dict[str, Any]:
-        """
-        Parse Terraform apply output.
-        """
-        # Similar to plan but for applied changes
-        return self.parse_plan(apply_output)
+        """Parse Terraform apply output."""
+        # Check for errors first
+        errors = self._detect_errors(apply_output)
+        if errors:
+            return {
+                "changes": {"create": [], "update": [], "delete": [], "resources": {}},
+                "error": errors[0]["message"],
+                "errors": errors,
+                "apply_status": "failed",
+            }
+
+        changes = self.parse_plan(apply_output)
+        changes["apply_status"] = "success"
+
+        # Count applied resources
+        apply_pattern = r"Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed"
+        match = re.search(apply_pattern, apply_output)
+        if match:
+            changes["applied"] = {
+                "added": int(match.group(1)),
+                "changed": int(match.group(2)),
+                "destroyed": int(match.group(3)),
+            }
+
+        return changes
+
+    def _detect_errors(self, output: str) -> List[Dict[str, str]]:
+        """Detect errors in Terraform output."""
+        errors = []
+        for pattern, error_type in TERRAFORM_ERROR_PATTERNS:
+            for match in re.finditer(pattern, output, re.MULTILINE):
+                message = match.group(1) if match.lastindex else match.group(0)
+                errors.append({
+                    "type": error_type,
+                    "message": message.strip(),
+                })
+        return errors
 
     def extract_resource_changes(self, tfstate: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Extract changes from Terraform state (for drift detection).
-        """
+        """Extract changes from Terraform state (for drift detection)."""
         changes = []
         resources = tfstate.get("resources", [])
         for resource in resources:
-            # Compare current state with desired state (simplified)
-            # In reality, you'd need to compare with a previous state or plan
             pass
         return changes
 
-# For testing
+
 if __name__ == "__main__":
     parser = TerraformParser()
     sample_plan = """
@@ -77,3 +129,9 @@ if __name__ == "__main__":
     # aws_s3_bucket.logs will be destroyed
     """
     print(json.dumps(parser.parse_plan(sample_plan), indent=2))
+
+    sample_error = """
+    Error: Error creating S3 bucket: AccessDenied: Access Denied
+    """
+    print("\nError parsing:")
+    print(json.dumps(parser.parse_plan(sample_error), indent=2))

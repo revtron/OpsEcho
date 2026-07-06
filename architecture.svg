@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="collector" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="pipeline" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="ai" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#ef4444"/>
+    </linearGradient>
+    <linearGradient id="api" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f472b6"/>
+      <stop offset="100%" style="stop-color:#ec4899"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowAi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="750" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="550" y="45" text-anchor="middle" fill="#f8fafc" font-size="24" font-weight="bold">OpsEcho Architecture</text>
+  <text x="550" y="68" text-anchor="middle" fill="#94a3b8" font-size="13">Phase 1 (solid) + Phase 2 AI Layer (dashed)</text>
+
+  <!-- ==================== SECTION: EVENT SOURCES ==================== -->
+  <rect x="30" y="90" width="1040" height="120" rx="8" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="50" y="112" fill="#64748b" font-size="11" font-weight="bold" text-transform="uppercase" letter-spacing="1">EVENT SOURCES / COLLECTORS</text>
+
+  <!-- Source boxes -->
+  <rect x="50" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="120" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Kubernetes</text>
+  <text x="120" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">Pods · Deployments · Nodes</text>
+
+  <rect x="210" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="280" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Terraform</text>
+  <text x="280" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">State · Plans · Applies</text>
+
+  <rect x="370" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="440" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Git / GitHub</text>
+  <text x="440" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">Pushes · PRs · CI/CD</text>
+
+  <rect x="530" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="600" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">AWS EC2</text>
+  <text x="600" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">Instances · Health Checks</text>
+
+  <rect x="690" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="760" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Docker</text>
+  <text x="760" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">Containers · Events</text>
+
+  <rect x="850" y="125" width="140" height="65" rx="6" fill="url(#collector)" filter="url(#shadow)"/>
+  <text x="920" y="152" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">CI/CD</text>
+  <text x="920" y="170" text-anchor="middle" fill="#c7d2fe" font-size="10">Pipelines · Builds</text>
+
+  <!-- Arrow from sources to pipeline -->
+  <line x1="550" y1="195" x2="550" y2="235" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== SECTION: PIPELINE ==================== -->
+  <rect x="30" y="240" width="1040" height="140" rx="8" fill="none" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="262" fill="#64748b" font-size="11" font-weight="bold" text-transform="uppercase" letter-spacing="1">PROCESSING PIPELINE</text>
+
+  <!-- Normalization -->
+  <rect x="50" y="280" width="230" height="80" rx="6" fill="url(#pipeline)" filter="url(#shadow)"/>
+  <text x="165" y="310" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">1. Normalization</text>
+  <text x="165" y="330" text-anchor="middle" fill="#a5f3fc" font-size="10">Common schema · Status/Severity</text>
+  <text x="165" y="345" text-anchor="middle" fill="#a5f3fc" font-size="10">Failure reason extraction</text>
+
+  <line x1="285" y1="320" x2="335" y2="320" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Context Engine -->
+  <rect x="345" y="280" width="280" height="80" rx="6" fill="url(#pipeline)" filter="url(#shadow)"/>
+  <text x="485" y="305" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">2. Context Engine</text>
+  <text x="485" y="325" text-anchor="middle" fill="#a5f3fc" font-size="10">Deployment history · Ownership</text>
+  <text x="485" y="340" text-anchor="middle" fill="#a5f3fc" font-size="10">Dependencies · Historical patterns</text>
+  <text x="485" y="355" text-anchor="middle" fill="#a5f3fc" font-size="10">Cross-source correlations</text>
+
+  <line x1="630" y1="320" x2="680" y2="320" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAi)" stroke-dasharray="6,3"/>
+
+  <!-- AI Layer -->
+  <rect x="690" y="268" width="300" height="102" rx="6" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,3" filter="url(#shadow)"/>
+  <text x="840" y="295" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="bold">3. AI Layer (Phase 2)</text>
+  <text x="840" y="315" text-anchor="middle" fill="#fde68a" font-size="10">LLM-powered summaries</text>
+  <text x="840" y="332" text-anchor="middle" fill="#fde68a" font-size="10">Natural language Q&amp;A</text>
+  <text x="840" y="349" text-anchor="middle" fill="#fde68a" font-size="10">← Ollama (Phi / TinyLlama)</text>
+  <rect x="830" y="355" width="20" height="8" rx="2" fill="#f59e0b" opacity="0.5"/>
+  <text x="875" y="363" text-anchor="middle" fill="#92400e" font-size="8" font-weight="bold">PHASE 2</text>
+
+  <!-- Arrow down to API -->
+  <line x1="550" y1="385" x2="550" y2="425" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== SECTION: API ==================== -->
+  <rect x="220" y="430" width="660" height="80" rx="8" fill="none" stroke="#334155" stroke-width="1"/>
+  <text x="240" y="452" fill="#64748b" font-size="11" font-weight="bold" text-transform="uppercase" letter-spacing="1">API LAYER (FastAPI)</text>
+
+  <rect x="240" y="460" width="140" height="40" rx="5" fill="url(#api)" filter="url(#shadow)"/>
+  <text x="310" y="485" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">POST /events</text>
+
+  <rect x="400" y="460" width="140" height="40" rx="5" fill="url(#api)" filter="url(#shadow)"/>
+  <text x="470" y="485" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">GET /timeline</text>
+
+  <rect x="560" y="460" width="140" height="40" rx="5" fill="url(#api)" filter="url(#shadow)"/>
+  <text x="630" y="485" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">GET /search</text>
+
+  <rect x="720" y="460" width="140" height="40" rx="5" fill="url(#api)" filter="url(#shadow)"/>
+  <text x="790" y="485" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">POST /demo</text>
+
+  <!-- Database connection -->
+  <line x1="550" y1="515" x2="550" y2="545" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== SECTION: DATABASE ==================== -->
+  <rect x="350" y="550" width="400" height="55" rx="25" fill="#334155" stroke="#475569" stroke-width="1" filter="url(#shadow)"/>
+  <ellipse cx="425" cy="577" rx="30" ry="18" fill="#475569"/>
+  <text x="425" y="582" text-anchor="middle" fill="#94a3b8" font-size="9">DB</text>
+  <text x="550" y="575" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="bold">SQLite / PostgreSQL</text>
+  <text x="550" y="593" text-anchor="middle" fill="#64748b" font-size="10">infrastructure_events · event_summaries · deployments · services</text>
+
+  <!-- Arrow to frontend -->
+  <line x1="970" y1="480" x2="1020" y2="480" stroke="#f472b6" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1020" y1="480" x2="1020" y2="590" stroke="#f472b6" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== SECTION: FRONTEND ==================== -->
+  <rect x="30" y="620" width="1040" height="110" rx="8" fill="none" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="642" fill="#64748b" font-size="11" font-weight="bold" text-transform="uppercase" letter-spacing="1">FRONTEND DASHBOARD (Next.js 14 + Tailwind)</text>
+
+  <rect x="50" y="655" width="145" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="122" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Health Overview</text>
+  <text x="122" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">Summary cards</text>
+
+  <rect x="215" y="655" width="145" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="287" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Pod Status</text>
+  <text x="287" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">K8s pod metrics</text>
+
+  <rect x="380" y="655" width="145" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="452" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">EC2 Health</text>
+  <text x="452" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">Instance status</text>
+
+  <rect x="545" y="655" width="145" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="617" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Event Chart</text>
+  <text x="617" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">Time-series analytics</text>
+
+  <rect x="710" y="655" width="145" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="782" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Distribution</text>
+  <text x="782" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">Donut chart</text>
+
+  <rect x="875" y="655" width="175" height="60" rx="5" fill="url(#front)" filter="url(#shadow)"/>
+  <text x="962" y="682" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Operational Timeline</text>
+  <text x="962" y="700" text-anchor="middle" fill="#fce7f3" font-size="9">Filterable event list</text>
+
+  <!-- Legend -->
+  <rect x="30" y="740" width="1040" height="1" fill="#334155"/>
+  <rect x="30" y="748" width="12" height="12" rx="2" fill="url(#pipeline)"/>
+  <text x="48" y="758" fill="#94a3b8" font-size="10">Phase 1 (complete)</text>
+  <rect x="160" y="748" width="12" height="12" rx="2" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3,2"/>
+  <text x="178" y="758" fill="#94a3b8" font-size="10">Phase 2 (AI integration — planned)</text>
+</svg>

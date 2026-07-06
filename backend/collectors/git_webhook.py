@@ -4,7 +4,7 @@ from typing import Dict, Any
 import git
 from github import Github
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 class GitWebhook:
     def __init__(self):
@@ -83,10 +83,10 @@ class GitWebhook:
                     "merged_at": pr.get("merged_at")
                 },
                 "repository": payload.get("repository", {}),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": "git"
             }
-            
+
             return event_data
         except Exception as e:
             self.logger.error(f"Error processing pull request event: {e}")

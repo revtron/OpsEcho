@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
 from db.models import InfrastructureEvent, EventSummary, Deployment, Service
@@ -49,7 +49,7 @@ class OperationalContextEngine:
             enriched["correlations"] = correlations
             
             # Add enrichment timestamp
-            enriched["enriched_at"] = datetime.utcnow().isoformat()
+            enriched["enriched_at"] = datetime.now(timezone.utc).isoformat()
             
             return enriched
             
@@ -68,7 +68,7 @@ class OperationalContextEngine:
             # Look for deployments in the same service/namespace around the same time
             # This is a simplified implementation
             deployments = db.query(Deployment).filter(
-                Deployment.timestamp >= datetime.utcnow() - timedelta(days=7)
+                Deployment.timestamp >= datetime.now(timezone.utc) - timedelta(days=7)
             ).limit(10).all()
             
             history = []
@@ -100,7 +100,7 @@ class OperationalContextEngine:
             # This is a placeholder - in reality, you'd have an incidents table
             events = db.query(InfrastructureEvent).filter(
                 InfrastructureEvent.event_type == event.get("event_type"),
-                InfrastructureEvent.timestamp >= datetime.utcnow() - timedelta(days=30)
+                InfrastructureEvent.timestamp >= datetime.now(timezone.utc) - timedelta(days=30)
             ).limit(5).all()
             
             incidents = []
@@ -146,7 +146,7 @@ class OperationalContextEngine:
                         dependencies.append({
                             "name": dep_service.name,
                             "ownership": dep_service.ownership,
-                            "metadata": dep_service.metadata
+                            "metadata": dep_service.service_metadata
                         })
             
             db.close()
@@ -161,21 +161,20 @@ class OperationalContextEngine:
         """
         try:
             db = SessionLocal()
-            # Look for similar events that resulted in failures
-            # This is simplified - in reality, you'd have failure markers
             similar_events = db.query(InfrastructureEvent).filter(
                 InfrastructureEvent.event_type == event.get("event_type"),
-                InfrastructureEvent.raw_data.contains({"status": "failed"})  # Simplified
+                InfrastructureEvent.status.in_(["failed", "degraded"])
             ).limit(5).all()
-            
+
             failures = []
             for ev in similar_events:
                 failures.append({
                     "event_id": ev.id,
                     "timestamp": ev.timestamp.isoformat() if ev.timestamp else None,
-                    "failure_type": ev.raw_data.get("status", "unknown") if ev.raw_data else "unknown"
+                    "failure_type": ev.failure_reason or ev.status or "unknown",
+                    "severity": ev.severity,
                 })
-            
+
             db.close()
             return failures
         except Exception as e:
@@ -201,9 +200,9 @@ class OperationalContextEngine:
             ownership_info = {
                 "service": service.name,
                 "ownership": service.ownership,
-                "metadata": service.metadata
+                "metadata": service.service_metadata
             }
-            
+
             db.close()
             return ownership_info
         except Exception as e:
@@ -224,7 +223,7 @@ class OperationalContextEngine:
             pattern_events = db.query(InfrastructureEvent).filter(
                 InfrastructureEvent.event_type == event_type,
                 InfrastructureEvent.source == source,
-                InfrastructureEvent.timestamp >= datetime.utcnow() - timedelta(days=90)
+                InfrastructureEvent.timestamp >= datetime.now(timezone.utc) - timedelta(days=90)
             ).all()
             
             # Calculate simple patterns
@@ -262,7 +261,7 @@ class OperationalContextEngine:
             # Look for other infrastructure events in the same time window
             event_time = datetime.fromisoformat(event.get("timestamp").replace("Z", "+00:00")) if isinstance(event.get("timestamp"), str) else event.get("timestamp")
             if not event_time:
-                event_time = datetime.utcnow()
+                event_time = datetime.now(timezone.utc)
             
             time_window = timedelta(hours=2)  # Look 2 hours before and after
             

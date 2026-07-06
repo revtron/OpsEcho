@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L5,10 L10,0 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="900" height="520" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="bold">OpsEcho — Architecture Flow</text>
+  <text x="450" y="60" text-anchor="middle" fill="#64748b" font-size="12">Phase 1 (complete) → Phase 2 (AI, planned)</text>
+
+  <!-- Row 1: Sources -->
+  <rect x="60" y="85" width="780" height="50" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="100" y="105" fill="#64748b" font-size="10" font-weight="bold">SOURCES</text>
+  <rect x="80" y="115" width="75" height="18" rx="3" fill="#312e81"/>
+  <text x="117" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">Kubernetes</text>
+  <rect x="165" y="115" width="70" height="18" rx="3" fill="#312e81"/>
+  <text x="200" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">Terraform</text>
+  <rect x="245" y="115" width="55" height="18" rx="3" fill="#312e81"/>
+  <text x="272" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">Git/GH</text>
+  <rect x="310" y="115" width="50" height="18" rx="3" fill="#312e81"/>
+  <text x="335" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">AWS</text>
+  <rect x="370" y="115" width="55" height="18" rx="3" fill="#312e81"/>
+  <text x="397" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">Docker</text>
+  <rect x="435" y="115" width="45" height="18" rx="3" fill="#312e81"/>
+  <text x="457" y="128" text-anchor="middle" fill="#a5b4fc" font-size="10">CI/CD</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="140" x2="450" y2="170" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+  <!-- Row 2: Pipeline -->
+  <rect x="60" y="175" width="780" height="50" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="100" y="195" fill="#64748b" font-size="10" font-weight="bold">PIPELINE</text>
+  <rect x="80" y="205" width="160" height="18" rx="3" fill="#155e75"/>
+  <text x="160" y="218" text-anchor="middle" fill="#67e8f9" font-size="10">1. Normalization Engine</text>
+  <text x="248" y="218" fill="#64748b" font-size="12">→</text>
+  <rect x="260" y="205" width="180" height="18" rx="3" fill="#155e75"/>
+  <text x="350" y="218" text-anchor="middle" fill="#67e8f9" font-size="10">2. Context Enrichment</text>
+  <text x="448" y="218" fill="#64748b" font-size="12">→</text>
+  <rect x="460" y="200" width="180" height="28" rx="3" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="550" y="218" text-anchor="middle" fill="#fbbf24" font-size="10">3. AI Layer (Phase 2)</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="230" x2="450" y2="260" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+  <!-- Row 3: Store -->
+  <rect x="60" y="265" width="780" height="50" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="100" y="285" fill="#64748b" font-size="10" font-weight="bold">STORE</text>
+  <ellipse cx="310" cy="300" rx="70" ry="16" fill="#334155" stroke="#475569" stroke-width="1"/>
+  <text x="310" y="305" text-anchor="middle" fill="#cbd5e1" font-size="11">SQLite / PostgreSQL</text>
+  <rect x="400" y="283" width="2" height="30" fill="#475569"/>
+  <rect x="415" y="290" width="120" height="18" rx="3" fill="#334155"/>
+  <text x="475" y="303" text-anchor="middle" fill="#94a3b8" font-size="10">Event Summaries</text>
+
+  <!-- Arrow right to API -->
+  <line x1="550" y1="290" x2="640" y2="290" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Row 4: API -->
+  <rect x="60" y="340" width="780" height="50" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="100" y="360" fill="#64748b" font-size="10" font-weight="bold">API</text>
+  <rect x="80" y="370" width="100" height="18" rx="3" fill="#065f46"/>
+  <text x="130" y="383" text-anchor="middle" fill="#6ee7b7" font-size="10">POST /events</text>
+  <rect x="195" y="370" width="100" height="18" rx="3" fill="#065f46"/>
+  <text x="245" y="383" text-anchor="middle" fill="#6ee7b7" font-size="10">GET /timeline</text>
+  <rect x="310" y="370" width="100" height="18" rx="3" fill="#065f46"/>
+  <text x="360" y="383" text-anchor="middle" fill="#6ee7b7" font-size="10">GET /search</text>
+  <rect x="425" y="370" width="100" height="18" rx="3" fill="#065f46"/>
+  <text x="475" y="383" text-anchor="middle" fill="#6ee7b7" font-size="10">POST /demo</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="395" x2="450" y2="425" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+  <!-- Row 5: Frontend -->
+  <rect x="60" y="430" width="780" height="50" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="100" y="450" fill="#64748b" font-size="10" font-weight="bold">FRONTEND</text>
+  <rect x="80" y="460" width="120" height="18" rx="3" fill="#831843"/>
+  <text x="140" y="473" text-anchor="middle" fill="#f9a8d4" font-size="10">Next.js 14 + Tailwind</text>
+  <text x="215" y="473" fill="#64748b" font-size="11">→ Dashboard UI</text>
+
+  <!-- Stack badge -->
+  <rect x="650" y="88" width="180" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="740" y="102" text-anchor="middle" fill="#94a3b8" font-size="9">Python · FastAPI · SQLAlchemy</text>
+</svg>

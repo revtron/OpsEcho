@@ -8,13 +8,15 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 
+# Override DATABASE_URL to use SQLite for demo
+os.environ['DATABASE_URL'] = 'sqlite:///./opscho.db'
+
 from db.models import Base, InfrastructureEvent, EventSummary
 from db.database import engine, SessionLocal
 from normalization.engine import NormalizationEngine
 from context_engine.engine import OperationalContextEngine
-from ai_layer.explainer import OperationalExplainer
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 def demo_components():
     print("=" * 60)
@@ -40,7 +42,7 @@ def demo_components():
         "id": 1,
         "event_type": "kubernetes",
         "source": "kubernetes",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "raw_data": {
             "type": "Pod",
             "name": "web-api-7d6f8c4b9-abcde",
