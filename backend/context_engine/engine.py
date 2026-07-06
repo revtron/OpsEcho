@@ -308,10 +308,11 @@ class OperationalContextEngine:
                     raw_data = json.loads(raw_data)
                 
                 # Try to get from labels or annotations
-                if raw_data.get("kind") == "Pod":
+                resource_kind = raw_data.get("kind") or raw_data.get("type")
+                if resource_kind == "Pod":
                     # In a real system, you'd extract from pod labels
                     return raw_data.get("name", "").split("-")[0] if "-" in raw_data.get("name", "") else raw_data.get("name", "unknown")
-                elif raw_data.get("kind") == "Deployment":
+                elif resource_kind == "Deployment":
                     return raw_data.get("name", "unknown")
                     
             elif event_type == "terraform":
